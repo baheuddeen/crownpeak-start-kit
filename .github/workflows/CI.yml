@@ -1,0 +1,38 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: CI
+
+on:
+  push:
+    branches: [ "*" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.19.3]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - name: Install packages
+      run: npm ci
+    - name: Run buildLcss
+      run: npm run build:css
+    - name: Run upload to crownpeak
+      env:
+        CI: true
+        CP_API_USERNAME: ${{ secrets.CP_API_USERNAME }}
+        CP_API_PASSWORD: ${{ secrets.CP_API_PASSWORD }}
+        CP_API_KEY: ${{ secrets.CP_API_KEY }}
+        BRANCH_NAME: ${{ github.ref_name }}
+      run: npm run cp:upload

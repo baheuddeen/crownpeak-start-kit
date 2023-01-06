@@ -1,0 +1,37 @@
+{
+  "name": "crownpeak-start-kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "gulp build-css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baheuddeen/crownpeak-start-kit.git"
+  },
+  "author": "Baheudeen",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^10.4.13",
+    "browser-sync": "2.27.10",
+    "cssnano": "^5.1.14",
+    "dotenv": "^16.0.3",
+    "gulp": "4.0.2",
+    "gulp-change": "^1.0.2",
+    "gulp-file-include": "2.3.0",
+    "gulp-postcss": "9.0.1",
+    "gulp-rename": "^2.0.0",
+    "gulp-run": "1.7.1",
+    "gulp-sass": "5.0.0",
+    "gulp-sourcemaps": "3.0.0",
+    "node-html-parser": "^6.1.4",
+    "postcss": "8.4.5",
+    "requestify": "0.2.5",
+    "sass": "1.43.4"
+  },
+  "bugs": {
+    "url": "https://github.com/baheuddeen/crownpeak-start-kit/issues"
+  },
+  "homepage": "https://github.com/baheuddeen/crownpeak-start-kit#readme"
+}
