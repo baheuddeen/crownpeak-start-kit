@@ -2,42 +2,30 @@
 const core = require('@actions/core');
 const config = require('./config');
 const Workflow = require('./enums');
-const { updateFile, authentication } = require('./updateFile');
+const { updateFile, getAssetId, getFolderId, authentication } = require('./updateFile');
+const { getCssFiles } = require('./prepareFiles');
 
+console.log('workflow', config.currentWorkflow);
 if (config.currentWorkflow === Workflow.NOOP) {
   return;
 }
 
-let bundleAssetId;
-let bundleMapAssetId;
-let CSSAssetId;
-let CSSMapAssetId;
-let commandId;
-
+let status;
+const containingFolderIdConfig = {
+  css: config.CSS_FOLDER_ID
+};
 switch (config.currentWorkflow) {
   case Workflow.Dev:
-    bundleAssetId = config.DEV_BUNDLE_ASSET_ID;
-    bundleMapAssetId = config.DEV_BUNDLE_MAP_ASSET_ID;
-    CSSAssetId = config.DEV_CSS_ASSET_ID;
-    CSSMapAssetId = config.DEV_MAP_CSS_ASSET_ID;
-    commandId = config.DEV_WORKFLOW_COMMAND_ID;
+    status = config.STATUS_DEV;
     break;
   case Workflow.Stage:
-    bundleAssetId = config.STAGE_BUNDLE_ASSET_ID;
-    bundleMapAssetId = config.STAGE_BUNDLE_MAP_ASSET_ID;
-    CSSAssetId = config.STAGE_CSS_ASSET_ID;
-    CSSMapAssetId = config.STAGE_MAP_CSS_ASSET_ID;
-    commandId = config.STAGE_WORKFLOW_COMMAND_ID;
+    status = config.STATUS_STAGE;
     break;
   case Workflow.Live:
     if (config.BRANCH_NAME !== 'main') {
       throw new Error(`Can't push ${config.BRANCH_NAME} to live. Only main can be pushed to live`);
     }
-    bundleAssetId = config.LIVE_BUNDLE_ASSET_ID;
-    bundleMapAssetId = config.LIVE_BUNDLE_MAP_ASSET_ID;
-    CSSAssetId = config.LIVE_CSS_ASSET_ID;
-    CSSMapAssetId = config.LIVE_MAP_CSS_ASSET_ID;
-    commandId = config.LIVE_WORKFLOW_COMMAND_ID;
+    status = config.STATUS_LIVE;
     break;
 
   default:
@@ -46,11 +34,22 @@ switch (config.currentWorkflow) {
 
 async function updateFiles() {
   try {
+    const cssFiles = await getCssFiles();
+
     await authentication();
-    await updateFile(bundleAssetId, commandId, 'www-onshape-bundle.js', './dist/js/www-onshape-bundle.js');
-    await updateFile(bundleMapAssetId, commandId, 'www-onshape-bundle.js.map', './dist/js/www-onshape-bundle.js.map');
-    await updateFile(CSSAssetId, commandId, 'main.css', './dist/css/main.css');
-    await updateFile(CSSMapAssetId, commandId, 'main.css.map', './dist/css/main.css.map');
+    for(const file of cssFiles){
+      let conatainigFolderId = containingFolderIdConfig[file.containingFolder];
+      if(!conatainigFolderId)
+      {
+        conatainigFolderId = await getFolderId(file.containingFolder, config.CSS_FOLDER_ID);
+        containingFolderIdConfig[file.containingFolder] = conatainigFolderId;
+        console.log(conatainigFolderId);
+      }
+      const destFileId = await getAssetId(file.label, conatainigFolderId, status);
+      console.log(destFileId);
+      await updateFile(destFileId, status, file.label, file.sourcePath);
+    }
+    
   } catch (error) {
     core.error(error);
     core.setFailed(error);

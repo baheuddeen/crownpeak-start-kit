@@ -10,7 +10,6 @@ async function authentication() {
   }
 }
 
-// auth then updating an exist file witouht template
 async function updateFile(assetId, commandId, assetLabel, srcFile) {
   try {
     // reading the file async
@@ -43,7 +42,7 @@ async function updateFile(assetId, commandId, assetLabel, srcFile) {
     );
 
     // republish the assetcls
-    await accessAPI.assetRepublish(
+    await accessAPI.routeAsset(
       assetId,
       commandId,
     );
@@ -52,4 +51,21 @@ async function updateFile(assetId, commandId, assetLabel, srcFile) {
   }
 }
 
-module.exports = { updateFile, authentication };
+
+async function getAssetId(label, containgFolderId, statusId) {
+  try {
+    return await accessAPI.getAssetId(label, containgFolderId, statusId);
+  } catch (err) {
+    throw new Error(`can't upload the file ${err}`);
+  }
+}
+
+async function getFolderId(label, containgFolderId) {
+  try {
+    return await accessAPI.getFolderId(label, containgFolderId);
+  } catch (err) {
+    throw new Error(`can't upload the file ${err}`);
+  }
+}
+
+module.exports = { updateFile, getAssetId, authentication, getFolderId };

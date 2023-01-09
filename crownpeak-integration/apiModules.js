@@ -72,15 +72,12 @@ exports.assetUpload = async (newName, folderId, modelId, workflowId, bytes) => {
 };
 
 exports.assetCreate = async (newName, folderId,
-  modelId, type, devTemplateLanguage, templateId, workflowId) => {
+  modelId, type) => {
   const body = {
     newName,
     destinationFolderId: folderId,
     modelId,
     type,
-    devTemplateLanguage,
-    templateId,
-    workflowId,
   };
   if (folderId === 0 || folderId === undefined) {
     console.log(`create asset error, folderId = ${folderId}`);
@@ -149,3 +146,103 @@ exports.assetRepublish = async (destId, commandId) => {
   const res = await restPost('/asset/executeworkflowcommand', body);
   return res;
 };
+
+exports.routeAsset = async (destId, stateId) => {
+  body = {
+    "list": [
+      destId
+    ],
+    "stateId": stateId,
+    "stateChangeCheck": true,
+    "publishDependencies": true
+  };
+  const res = await restPost('/asset/routeassets', body);
+  return res;
+}
+
+exports.getAssetId = async (label, containgFolderId, statusId) => {
+  body = {
+    "limit": 500,
+    "filterExpressions": [
+      {
+        "filterId": 0,
+        "logical": "And",
+        "name": "[Label]",
+        "propertyName": "Label",
+        "operation": "Equals",
+        "orderId": 1,
+        "value": `${label}`
+      },
+      {
+        "filterId": 0,
+        "logical": "NotSet",
+        "name": "[FolderId]",
+        "propertyName": "FolderId",
+        "operation": "Equals",
+        "orderId": 2,
+        "value": `${containgFolderId}`
+      }
+    ],
+    "sortOrder": null,
+    "baseAssetId": 0,
+    "additionalBuiltInFields": null,
+    "responseType": "WorklistAsset",
+    "pageNumber": 0,
+    "pageSize": 50
+  };
+
+  const res = await restPost('/asset/advancedsearch', body);
+  const results = res.searchResults;
+  if(results.length)
+  {
+    for(const result of results) {
+      if (result.status === statusId) return result.id;
+    } 
+    // should branch the exist asset and return the new asset branch
+    const createdAsset = await this.assetBranch(results[0].id);
+    return createdAsset["asset"].id;
+  }
+  const createdAsset = await this.assetCreate(label, containgFolderId, config.ASSET_MODEL_ID, 2);
+    return createdAsset["asset"].id;
+}
+
+
+exports.getFolderId = async (label, containgFolderId) => {
+  body = {
+    "limit": 500,
+    "filterExpressions": [
+      {
+        "filterId": 0,
+        "logical": "And",
+        "name": "[Label]",
+        "propertyName": "Label",
+        "operation": "Equals",
+        "orderId": 1,
+        "value": `${label}`
+      },
+      {
+        "filterId": 0,
+        "logical": "NotSet",
+        "name": "[FolderId]",
+        "propertyName": "FolderId",
+        "operation": "Equals",
+        "orderId": 2,
+        "value": `${containgFolderId}`
+      }
+    ],
+    "sortOrder": null,
+    "baseAssetId": 0,
+    "additionalBuiltInFields": null,
+    "responseType": "WorklistAsset",
+    "pageNumber": 0,
+    "pageSize": 50
+  };
+  const res = await restPost('/asset/advancedsearch', body);
+  const results = res.searchResults;
+  if(results.length)
+  {
+    return results[0].id;
+  }
+  const createdAsset = await this.assetCreate(label, containgFolderId, config.FOLDER_MODEL_ID, 4);
+  return createdAsset["asset"].id;
+}

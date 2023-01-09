@@ -8,6 +8,6 @@ const Workflow = require('./enums');
  * Workflow.Stage
  */
 module.exports = {
-  '': Workflow.Dev,
-  '': Workflow.Stage,
+  'dev': Workflow.Dev,
+  'stage': Workflow.Stage,
 };
